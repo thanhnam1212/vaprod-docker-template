@@ -1,0 +1,6 @@
+.env
+acme.json
+*/vendor
+*/node_modules
+wordpress/*
+!wordpress/.gitkeep

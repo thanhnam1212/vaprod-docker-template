@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/traefik.yml
+      - ./traefik/acme.json:/letsencrypt/acme.json
+    command:
+      - "--configFile=/traefik.yml"
+
+networks:
+  default:
+    name: prod-network
