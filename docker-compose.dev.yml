@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/traefik.yml
+      - ./traefik/acme.json:/letsencrypt/acme.json
+    command:
+      - "--configFile=/traefik.yml"
+      
+networks:
+  default:
+    name: prod-network
+      
+wp_db:
+    image: mariadb:10.4
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+    volumes:
+      - ./db/mysql:/var/lib/mysql
+
+  wordpress_vasoftco:
+    image: wordpress:php8.2-apache
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: wp_db
+      WORDPRESS_DB_NAME: wp_site1
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: wppass
+    volumes:
+      - ./wordpress/vasoftco.com:/var/www/html
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.wp1.rule=Host(`site1.localhost`)
+      - traefik.http.routers.wp1.entrypoints=web
+      
+
+wp_db:
+  image: mariadb:10.11
+  restart: always
+  environment:
+    MYSQL_ROOT_PASSWORD: rootpass
+  volumes:
+    - ./db/mysql:/var/lib/mysql
+
+wordpress_site1:
+  image: wordpress:php8.2-apache
+  restart: always
+  environment:
+    WORDPRESS_DB_HOST: wp_db
+    WORDPRESS_DB_NAME: wp_site1
+    WORDPRESS_DB_USER: wpuser
+    WORDPRESS_DB_PASSWORD: wppass
+  volumes:
+    - ./wordpress/site1:/var/www/html
+

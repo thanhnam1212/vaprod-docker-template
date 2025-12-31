@@ -1,5 +1,11 @@
 version: "3.9"
 
+networks:
+  proxy:
+    external: true
+  internal:
+    internal: true
+
 services:
   traefik:
     image: traefik:v3.0
@@ -14,7 +20,28 @@ services:
       - ./traefik/acme.json:/letsencrypt/acme.json
     command:
       - "--configFile=/traefik.yml"
+    
+  db:
+    image: mariadb:10.11
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./db/mysql:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
+    networks:
+      - internal
 
-networks:
-  default:
-    name: prod-network
+  wordpress_site1:
+    image: wordpress:php8.2-apache
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: wp_site1
+      WORDPRESS_DB_USER: wpuser
+      WORDPRESS_DB_PASSWORD: ${WP_DB_PASS}
+    volumes:
+      - ./wordpress/site1:/var/www/html
+    networks:
+      - internal
+      - proxy
